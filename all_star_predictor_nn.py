@@ -2,7 +2,7 @@ import sys
 import numpy
 import pandas
 from sklearn.model_selection import train_test_split
-from sklearn import svm
+import tensorflow as tf
 import time
 
 era = int(sys.argv[1])
@@ -30,19 +30,30 @@ print(X)
 
 Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size = 0.3, random_state = 42)
 
-model = svm.SVC()
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape = X.columns.shape),
+    tf.keras.layers.Dense(len(feature_list), activation='relu'),
+    tf.keras.layers.Dense(2)
+])
+
+model.compile(optimizer='adam',
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy'])
+
 
 start = time.time()
 
-model.fit(Xtrain.values, Ytrain)
+model.fit(Xtrain, Ytrain, epochs=10)
 
 end = time.time()
+
+predictions = model.predict(Xtest)
 
 correct = 0
 false_pos = 0
 false_neg = 0
-for i, x in enumerate(Xtest.values):
-    yhat = model.predict(x.reshape(1, -1))
+for i, _ in enumerate(predictions):
+    yhat = numpy.argmax(predictions[i])
     if Ytest[i] == yhat:
         correct += 1
     else:
@@ -50,16 +61,20 @@ for i, x in enumerate(Xtest.values):
             false_neg+=1
         else:
             false_pos+=1
+
         
 false_pos_tot = 0
 false_neg_tot = 0
 correct_tot = 0
+
+predictions = model.predict(X)
+
 for i, player in YX.iterrows():
     x = player[feature_list]
-    prediction = model.predict(x.to_numpy().reshape(1, -1))
+    prediction = numpy.argmax(predictions[i])
     if prediction == 1:
-        print(player['Player'], int(player['Year']))
-        print('True Label: {}'.format(player['AS']))
+        #print(player['Player'], int(player['Year']))
+        #print('True Label: {}'.format(player['AS']))
         if int(player['AS']) == 0:
             false_pos_tot += 1
         else:
