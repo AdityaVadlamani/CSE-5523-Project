@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import time
 
+tf.random.set_seed(42)
+
 era = int(sys.argv[1])
 
 YX = pandas.read_csv( "data/season_stats_AS.csv" )
@@ -28,18 +30,18 @@ X = YX[feature_list]
 print(Y)
 print(X)
 
-Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size = 0.3, random_state = 42)
 
 model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape = X.columns.shape),
-    tf.keras.layers.Dense(len(feature_list), activation='relu'),
-    tf.keras.layers.Dense(2)
+tf.keras.layers.Flatten(input_shape = X.columns.shape),
+tf.keras.layers.Dense((len(feature_list) + 2) // 2, activation='relu'),
+tf.keras.layers.Dense(2)
 ])
 
 model.compile(optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=['accuracy'])
 
+Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size = 0.3, random_state = 42)
 
 start = time.time()
 
@@ -52,6 +54,8 @@ predictions = model.predict(Xtest)
 correct = 0
 false_pos = 0
 false_neg = 0
+total_pos = numpy.sum(Ytest)
+total_neg = len(Ytest) - total_pos
 for i, _ in enumerate(predictions):
     yhat = numpy.argmax(predictions[i])
     if Ytest[i] == yhat:
@@ -63,33 +67,34 @@ for i, _ in enumerate(predictions):
             false_pos+=1
 
         
-false_pos_tot = 0
-false_neg_tot = 0
-correct_tot = 0
-
-predictions = model.predict(X)
-
-for i, player in YX.iterrows():
-    x = player[feature_list]
-    prediction = numpy.argmax(predictions[i])
-    if prediction == 1:
-        #print(player['Player'], int(player['Year']))
-        #print('True Label: {}'.format(player['AS']))
-        if int(player['AS']) == 0:
-            false_pos_tot += 1
-        else:
-            correct_tot += 1
-    else:
-        if int(player['AS']) == 1:
-            false_neg_tot += 1
-        else:
-            correct_tot += 1
+#false_pos_tot = 0
+#false_neg_tot = 0
+#correct_tot = 0
+#
+#predictions = model.predict(X)
+#
+#for i, player in YX.iterrows():
+#    x = player[feature_list]
+#    prediction = numpy.argmax(predictions[i])
+#    if prediction == 1:
+#        #print(player['Player'], int(player['Year']))
+#        #print('True Label: {}'.format(player['AS']))
+#        if int(player['AS']) == 0:
+#            false_pos_tot += 1
+#        else:
+#            correct_tot += 1
+#    else:
+#        if int(player['AS']) == 1:
+#            false_neg_tot += 1
+#        else:
+#            correct_tot += 1
         
 
 print("\nTest Accuracy: {} out of {} ({})".format(correct, len(Xtest), correct/len(Xtest)))
-print("False Positives on Test Set: {}".format(false_pos))
-print("False Negatives on Test Set: {}".format(false_neg))
-print("\nComplete Accuracy: {} out of {} ({})".format(correct_tot, len(YX), correct_tot/len(YX)))
-print("False Positives on Complete Set: {}".format(false_pos_tot))
-print("False Negatives on Complete Set: {}".format(false_neg_tot))
+print("False Positive rate on Test Set: {}/{} (= {})".format(false_pos, total_neg, false_pos / total_neg))
+print("False Negative rate on Test Set: {}/{} (= {})".format(false_neg, total_pos, false_neg / total_pos))
+#print("\nComplete Accuracy: {} out of {} ({})".format(correct_tot, len(YX), correct_tot/len(YX)))
+#print("False Positives on Complete Set: {}".format(false_pos_tot))
+#print("False Negatives on Complete Set: {}".format(false_neg_tot))
 print("\nTime elapsed: {} seconds".format(end - start))
+print()

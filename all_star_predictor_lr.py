@@ -30,7 +30,7 @@ print(X)
 
 Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size = 0.3, random_state = 42)
 
-model = LogisticRegression(max_iter = 1000)
+model = LogisticRegression(max_iter = 10000)
 
 start = time.time()
 
@@ -58,8 +58,8 @@ for i, player in YX.iterrows():
     x = player[feature_list]
     prediction = model.predict(x.to_numpy().reshape(1, -1))
     if prediction == 1:
-        print(player['Player'], int(player['Year']))
-        print('True Label: {}'.format(player['AS']))
+        #print(player['Player'], int(player['Year']))
+        #print('True Label: {}'.format(player['AS']))
         if int(player['AS']) == 0:
             false_pos_tot += 1
         else:
@@ -78,3 +78,11 @@ print("\nComplete Accuracy: {} out of {} ({})".format(correct_tot, len(YX), corr
 print("False Positives on Complete Set: {}".format(false_pos_tot))
 print("False Negatives on Complete Set: {}".format(false_neg_tot))
 print("\nTime elapsed: {} seconds".format(end - start))
+
+print("\nTest False Rates:")
+num_true = sum(Ytest)
+num_false = len(Ytest)-sum(Ytest)
+print("Total True: {}".format(num_true))
+print("Total False: {}".format(num_false))
+print("False Positive Rate: {}".format(false_pos/num_false))
+print("False Negative Rate: {}".format(false_neg/num_true))
