@@ -78,3 +78,11 @@ print("\nComplete Accuracy: {} out of {} ({})".format(correct_tot, len(YX), corr
 print("False Positives on Complete Set: {}".format(false_pos_tot))
 print("False Negatives on Complete Set: {}".format(false_neg_tot))
 print("\nTime elapsed: {} seconds".format(end - start))
+
+print("\nTest False Rates:")
+num_true = sum(Ytest)
+num_false = len(Ytest)-sum(Ytest)
+print("Total True: {}".format(num_true))
+print("Total False: {}".format(num_false))
+print("False Positive Rate: {}".format(false_pos/num_false))
+print("False Negative Rate: {}".format(false_neg/num_true))
