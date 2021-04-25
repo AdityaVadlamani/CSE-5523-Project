@@ -58,7 +58,7 @@ for i, player in YX.iterrows():
     x = player[feature_list]
     prediction = model.predict(x.to_numpy().reshape(1, -1))
     if prediction == 1:
-        #print(player['Player'], int(player['Year']))
+        print(player['Player'], int(player['Year']))
         #print('True Label: {}'.format(player['AS']))
         if int(player['AS']) == 0:
             false_pos_tot += 1
