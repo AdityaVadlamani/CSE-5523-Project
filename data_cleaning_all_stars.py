@@ -1,9 +1,6 @@
 import sys
 import numpy
 import pandas
-from sklearn.model_selection import train_test_split
-from sklearn import svm
-import time
 
 all_stars = pandas.read_csv( "data/nba_all_stars.csv" )
 
