@@ -3,19 +3,20 @@ import numpy
 import pandas
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_recall_fscore_support
 import time
 
 era = int(sys.argv[1])
 
-YX = pandas.read_csv( "data/season_stats_AS.csv" )
+YX = pandas.read_csv( "data/season_stats_AS_records_norm.csv" )
 
 if era == 1:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'W/L']
 elif era == 2:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'W/L']
     YX = YX[YX['Year']>=1974]
 elif era == 3:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%', 'W/L']
     YX = YX[YX['Year']>=1980]
     
 YX.dropna(subset = feature_list, inplace=True)
@@ -58,7 +59,7 @@ for i, player in YX.iterrows():
     x = player[feature_list]
     prediction = model.predict(x.to_numpy().reshape(1, -1))
     if prediction == 1:
-        print(player['Player'], int(player['Year']))
+        #print(player['Player'], int(player['Year']))
         #print('True Label: {}'.format(player['AS']))
         if int(player['AS']) == 0:
             false_pos_tot += 1
@@ -86,3 +87,9 @@ print("Total True: {}".format(num_true))
 print("Total False: {}".format(num_false))
 print("False Positive Rate: {}".format(false_pos/num_false))
 print("False Negative Rate: {}".format(false_neg/num_true))
+
+print("\nPrecision, Recall, F1:")
+
+Yhat = model.predict(Xtest)
+
+print(precision_recall_fscore_support(Ytest, Yhat, average = None))
