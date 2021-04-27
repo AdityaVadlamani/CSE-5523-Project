@@ -11,15 +11,15 @@ tf.random.set_seed(42)
 
 era = int(sys.argv[1])
 
-YX = pandas.read_csv( "data/season_stats_AS_records.csv" )
+YX = pandas.read_csv( "data/season_stats_AS_records_norm_2.csv" )
 
 if era == 1:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS']
 elif era == 2:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK']
     YX = YX[YX['Year']>=1974]
 elif era == 3:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FGA', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%']
     YX = YX[YX['Year']>=1980]
     
 YX.dropna(subset = feature_list, inplace=True)
@@ -69,7 +69,7 @@ for trial in range(10):
 
     start = time.time()
 
-    model.fit(Xtrain, Ytrain, epochs = 15, verbose = 0, class_weight={1 : .75, 0: .25}, validation_data=(Xval, Yval))
+    model.fit(Xtrain, Ytrain, epochs = 15, verbose = 0, validation_data=(Xval, Yval))
 
     end = time.time()
 
