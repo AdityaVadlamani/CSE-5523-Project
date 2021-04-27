@@ -36,20 +36,14 @@ Y = YX_upsampled['AS'].to_numpy().astype('int')
 
 X = YX_upsampled[feature_list]
 
-#X['AS'] = Y.tolist()
-
-#XTrue, YTrue = X[X['AS'] == 1], Y[Y == 1]
-#XFalse, YFalse = X[X['AS'] == 0], Y[Y == 0]
-
-#X = X.drop(['AS'], axis=1)
-#XTrue = XTrue.drop(['AS'], axis=1)
-#XFalse = XFalse.drop(['AS'], axis=1)
-
+accs = []
+fprs = []
+fnrs = []
+times = []
 for trial in range(10): 
 
     model = tf.keras.Sequential([
-    tf.keras.layers.Flatten(input_shape = X.columns.shape),
-    tf.keras.layers.Dense((len(feature_list) + 2) // 2, activation ='relu'),
+    tf.keras.layers.InputLayer(input_shape = X.columns.shape),
     tf.keras.layers.Dense((len(feature_list) + 2) // 2, activation ='relu'),
     tf.keras.layers.Dense(2, activation = 'softmax')
     ])
@@ -57,12 +51,6 @@ for trial in range(10):
     model.compile(optimizer='adam',
           loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
           metrics=['sparse_categorical_accuracy'])
-
-    #XTrueTrain, XTrueTest, YTrueTrain, YTrueTest = train_test_split(XTrue, YTrue, test_size = 0.3, random_state = trial)
-    #XFalseTrain, XFalseTest, YFalseTrain, YFalseTest = train_test_split(XFalse, YFalse, test_size = 0.3, random_state = trial)
-
-    #Xtrain, Xtest, Ytrain, Ytest = XTrueTrain.append(XFalseTrain, ignore_index = True), XTrueTest.append(XFalseTest, ignore_index = True),\
-#numpy.append(YTrueTrain, YFalseTrain), numpy.append(YTrueTest, YFalseTest)
 
     Xtrain, Xtest, Ytrain, Ytest = train_test_split(X, Y, test_size = .10, random_state = trial)
     Xtrain, Xval, Ytrain, Yval  = train_test_split(Xtrain, Ytrain, test_size= 1 / 9, random_state=trial)
@@ -96,45 +84,22 @@ for trial in range(10):
                 false_neg += 1
             else:
                 false_pos += 1
+    
+    accs.append(correct/len(Xtest))
+    fprs.append(false_pos / (false_pos + true_neg + EPSILON))
+    fnrs.append(false_neg / (false_neg + true_pos + EPSILON))
+    times.append(end - start)
 
-    precision = (true_pos)/(true_pos + false_pos + EPSILON)
-    recall = (true_pos)/(true_pos + false_neg + EPSILON)
-    F1 = 2 * (precision * recall)/(precision + recall + EPSILON)
-
-    #false_pos_tot = 0
-    #false_neg_tot = 0
-    #correct_tot = 0
-    #
-    #predictions = model.predict(X)
-    #
-    #for i, player in YX.iterrows():
-    #    x = player[feature_list]
-    #    prediction = numpy.argmax(predictions[i])
-    #    if prediction == 1:
-    #        #print(player['Player'], int(player['Year']))
-    #        #print('True Label: {}'.format(player['AS']))
-    #        if int(player['AS']) == 0:
-    #            false_pos_tot += 1
-    #        else:
-    #            correct_tot += 1
-    #    else:
-    #        if int(player['AS']) == 1:
-    #            false_neg_tot += 1
-    #        else:
-    #            correct_tot += 1
-            
     print("\nTrial: {}".format(trial + 1))
-    #print("Test Accuracy: {} out of {} ({})".format(correct, len(Xtest), correct/len(Xtest)))
-    #print("False Positive rate on Test Set: {}/{} (= {})".format(false_pos, total_neg, false_pos / total_neg))
-    #print("False Negative rate on Test Set: {}/{} (= {})".format(false_neg, total_pos, false_neg / total_pos))
+    print("Test Accuracy: {} out of {} ({})".format(correct, len(Xtest), correct/len(Xtest)))
+    print("False Positive rate on Test Set: {}/{} (= {})".format(false_pos, false_pos + true_neg, false_pos / (false_pos + true_neg + EPSILON)))
+    print("False Negative rate on Test Set: {}/{} (= {})".format(false_neg, false_neg + true_pos, false_neg / (false_neg + true_pos + EPSILON)))
 
-    print("Test Precision: {}/{} (= {})".format(true_pos, true_pos + false_pos, precision))
-    print("Test Recall: {}/{} (= {})".format(true_pos, true_pos + false_neg, recall))
-    print("Test F1 Score: {}".format(F1))
-
-
-    #print("\nComplete Accuracy: {} out of {} ({})".format(correct_tot, len(YX), correct_tot/len(YX)))
-    #print("False Positives on Complete Set: {}".format(false_pos_tot))
-    #print("False Negatives on Complete Set: {}".format(false_neg_tot))
     print("\nTime elapsed: {} seconds".format(end - start))
     print()
+
+print("\nAverages across 10 trials:")
+print("Test Accuracy: {}".format(sum(accs)/len(accs)))
+print("False Positive rate on Test Set: {}".format(sum(fprs)/len(fprs)))
+print("False Negative rate on Test Set: {}".format(sum(fnrs)/len(fnrs)))
+print("\nTime elapsed: {} seconds".format(sum(times)/len(times)))
