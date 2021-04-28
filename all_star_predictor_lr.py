@@ -70,9 +70,7 @@ for trial in range(10):
                 false_neg += 1
             else:
                 false_pos += 1
-            
-    print(model.coef_)
-
+                
     accs.append(correct/len(Xtest))
     fprs.append(false_pos / (false_pos + true_neg + EPSILON))
     fnrs.append(false_neg / (false_neg + true_pos + EPSILON))

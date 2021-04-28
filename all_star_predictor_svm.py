@@ -6,17 +6,19 @@ from sklearn import svm
 from sklearn.utils import resample, shuffle
 import time
 
+EPSILON = 1E-7
+
 era = int(sys.argv[1])
 
 YX = pandas.read_csv( "data/season_stats_AS_records_norm_2.csv" )
 
 if era == 1:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'W/L']
 elif era == 2:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'W/L']
     YX = YX[YX['Year']>=1974]
 elif era == 3:
-    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%']
+    feature_list = ['Age', 'G', 'TS%', 'FTr', 'WS', 'FG%', 'eFG%', 'FTA', 'FT%', 'TRB', 'AST', 'PTS', 'MP', 'PER', 'STL', 'BLK', 'USG%', '3PA', '3P%', 'W/L']
     YX = YX[YX['Year']>=1980]
     
 YX.dropna(subset = feature_list, inplace=True)
@@ -33,9 +35,10 @@ Y = YX_upsampled['AS'].to_numpy().astype('int')
 
 X = YX_upsampled[feature_list]
 
-precisions = []
-recalls = []
-f1s = []
+accs = []
+fprs = []
+fnrs = []
+times = []
 
 for trial in range(10):
 
@@ -68,34 +71,22 @@ for trial in range(10):
                 false_neg += 1
             else:
                 false_pos += 1
-                
-    EPSILON = 1E-7
-    precision = (true_pos)/(true_pos + false_pos + EPSILON)
-    recall = (true_pos)/(true_pos + false_neg + EPSILON)
-    F1 = 2 * (precision * recall)/(precision + recall + EPSILON)
-    print(model.coef_)
-    
-    precisions.append(precision)
-    recalls.append(recall)
-    f1s.append(F1)
-    
-        
+
+    accs.append(correct/len(Xtest))
+    fprs.append(false_pos / (false_pos + true_neg + EPSILON))
+    fnrs.append(false_neg / (false_neg + true_pos + EPSILON))
+    times.append(end - start)
 
     print("\nTrial: {}".format(trial + 1))
-    #print("Test Accuracy: {} out of {} ({})".format(correct, len(Xtest), correct/len(Xtest)))
-    #print("False Positive rate on Test Set: {}/{} (= {})".format(false_pos, total_neg, false_pos / total_neg))
-    #print("False Negative rate on Test Set: {}/{} (= {})".format(false_neg, total_pos, false_neg / total_pos))
-
-    print("Test Precision: {}/{} (= {})".format(true_pos, true_pos + false_pos, precision))
-    print("Test Recall: {}/{} (= {})".format(true_pos, true_pos + false_neg, recall))
-    print("Test F1 Score: {}".format(F1))
+    print("Test Accuracy: {} out of {} ({})".format(correct, len(Xtest), correct/len(Xtest)))
+    print("False Positive rate on Test Set: {}/{} (= {})".format(false_pos, false_pos + true_neg, false_pos / (false_pos + true_neg + EPSILON)))
+    print("False Negative rate on Test Set: {}/{} (= {})".format(false_neg, false_neg + true_pos, false_neg / (false_neg + true_pos + EPSILON)))
 
     print("\nTime elapsed: {} seconds".format(end - start))
-    
-print("\nAverages:")
+    print()
 
-print("Test Precision: {}".format(numpy.average(precisions)))
-print("Test Recall: {}".format(numpy.average(recalls)))
-print("Test F1 Score: {}".format(numpy.average(f1s)))
-
-
+print("\nAverages across 10 trials:")
+print("Test Accuracy: {}".format(sum(accs)/len(accs)))
+print("False Positive rate on Test Set: {}".format(sum(fprs)/len(fprs)))
+print("False Negative rate on Test Set: {}".format(sum(fnrs)/len(fnrs)))
+print("\nTime elapsed: {} seconds".format(sum(times)/len(times)))
