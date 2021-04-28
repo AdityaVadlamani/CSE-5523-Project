@@ -6,9 +6,9 @@
 
 #### Classification models (must be run with arg 1, 2, or 3 for era)
 
-`all_star_predictor_dt.py`\
 `all_star_predictor_lr.py`\
 `all_star_predictor_svm.py`\
+`all_star_predictor_dt.py`\
 `all_star_predictor_nn.py`
 
 #### Hyperparameter tuning scripts
